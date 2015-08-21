@@ -11,9 +11,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:text="@string/hello_world" />
+        android:text="@string/text_string"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/textView"/>
 
     <com.google.android.gms.ads.doubleclick.PublisherAdView
         android:id="@+id/ad_view"
@@ -22,6 +24,16 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         ads:adSize="BANNER"
-        ads:adUnitId="@+string/ad_unit_id" />
+        ads:adUnitId="@string/ad_unit_id" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Load Ad"
+        android:onClick="loadAdButtonClicked"
+        android:id="@+id/button"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="35dp"/>
 
 </RelativeLayout>

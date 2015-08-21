@@ -17,9 +17,12 @@ package com.google.android.gms.example.bannerexample;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.doubleclick.AppEventListener;
 import com.google.android.gms.ads.doubleclick.PublisherAdRequest;
 import com.google.android.gms.ads.doubleclick.PublisherAdView;
 
@@ -29,6 +32,10 @@ import com.google.android.gms.ads.doubleclick.PublisherAdView;
 public class MyActivity extends ActionBarActivity {
 
     private PublisherAdView mAdView;
+
+    // Flags to check and handle PubMatic passback
+    private boolean mIsAppEventPubmaticPbk = false;
+    private boolean mIsAdLoadSuccessful = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,30 +51,72 @@ public class MyActivity extends ActionBarActivity {
         // "Use AdRequest.Builder.addTestDevice("ABCDEF012345") to get test ads on this device."
         PublisherAdRequest adRequest = new PublisherAdRequest.Builder().build();
 
+        mAdView.setAdListener(new AdListener() {
+
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+                Log.i("BannerAdExample", "onAdLoaded()");
+                mIsAdLoadSuccessful = true;
+                loadNewAd();
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                super.onAdFailedToLoad(errorCode);
+
+                // Reset both flags
+                mIsAdLoadSuccessful = false;
+                mIsAppEventPubmaticPbk = false;
+            }
+        });
+
+        mAdView.setAppEventListener(new AppEventListener() {
+            @Override
+            public void onAppEvent(String key, String value) {
+                Log.i("BannerAdExample", "onAppEvent() Key:" + key + " Value:" + value);
+                if (TextUtils.equals(key, "pmpbk") && TextUtils.equals(value, "1")) {
+                    // App event pmpbk with value 1 indicates PubMatic passed back
+                    // Set a pass back flag
+                    mIsAppEventPubmaticPbk = true;
+                    loadNewAd();
+                }
+            }
+        });
+
         // Start loading the ad in the background.
         mAdView.loadAd(adRequest);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.my, menu);
-        return true;
-    }
+    /**
+     * Create and send new ad request adding custom targetting with PubMatic passback information
+     */
+    private synchronized void loadNewAd() {
+        // Send new request only when both flags are true
+        if (mIsAdLoadSuccessful && mIsAppEventPubmaticPbk) {
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+            // First Reset both flags
+            mIsAdLoadSuccessful = false;
+            mIsAppEventPubmaticPbk = false;
+
+            // Create new ad request with custom targeting
+            PublisherAdRequest publisherAdRequest = new PublisherAdRequest.Builder().addCustomTargeting("pmpbk", "1").build();
+            Log.i("BannerAdExample", "Sending new ad request with pmpbk=1");
+
+            // Send new ad request
+            mAdView.loadAd(publisherAdRequest);
         }
-        return super.onOptionsItemSelected(item);
     }
 
-    /** Called when leaving the activity */
+    public void loadAdButtonClicked(View view) {
+        // Send new ad request
+        PublisherAdRequest adRequest = new PublisherAdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+    }
+
+    /**
+     * Called when leaving the activity
+     */
     @Override
     public void onPause() {
         if (mAdView != null) {
@@ -76,7 +125,9 @@ public class MyActivity extends ActionBarActivity {
         super.onPause();
     }
 
-    /** Called when returning to the activity */
+    /**
+     * Called when returning to the activity
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -85,7 +136,9 @@ public class MyActivity extends ActionBarActivity {
         }
     }
 
-    /** Called before the activity is destroyed */
+    /**
+     * Called before the activity is destroyed
+     */
     @Override
     public void onDestroy() {
         if (mAdView != null) {
@@ -93,4 +146,6 @@ public class MyActivity extends ActionBarActivity {
         }
         super.onDestroy();
     }
+
+
 }
