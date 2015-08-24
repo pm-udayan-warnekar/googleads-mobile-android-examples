@@ -58,7 +58,7 @@ public class MyActivity extends ActionBarActivity {
                 super.onAdLoaded();
                 Log.i("BannerAdExample", "onAdLoaded()");
                 mIsAdLoadSuccessful = true;
-                loadNewAd();
+                firePassbackRequest();
             }
 
             @Override
@@ -79,7 +79,7 @@ public class MyActivity extends ActionBarActivity {
                     // App event pmpbk with value 1 indicates PubMatic passed back
                     // Set a pass back flag
                     mIsAppEventPubmaticPbk = true;
-                    loadNewAd();
+                    firePassbackRequest();
                 }
             }
         });
@@ -89,9 +89,9 @@ public class MyActivity extends ActionBarActivity {
     }
 
     /**
-     * Create and send new ad request adding custom targetting with PubMatic passback information
+     * Create and send new ad request adding custom targeting with PubMatic passback information
      */
-    private synchronized void loadNewAd() {
+    private synchronized void firePassbackRequest() {
         // Send new request only when both flags are true
         if (mIsAdLoadSuccessful && mIsAppEventPubmaticPbk) {
 
